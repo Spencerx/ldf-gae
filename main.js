@@ -60,7 +60,7 @@ apejs.urls = {
                 model.read(reader, null, 'N-TRIPLE');
             }
         
-            var contentType = request.getContentType();
+            var contentType = request.getHeader('Accept');
             if(!contentType)
                 contentType = 'text/html';
 
@@ -186,7 +186,8 @@ _:object hydra:variable "object";\
     if(currentPage > 1)
         controls += ':ldf hydra:previousPage <'+previousPage +'> .';
 
-    controls += ':ldf hydra:nextPage <'+nextPage +'> .';
+    if(totalItems > (itemsPerPage * currentPage))
+        controls += ':ldf hydra:nextPage <'+nextPage +'> .';
 
     var reader = new StringReader(controls);
     model.read(reader, null, 'TURTLE');
