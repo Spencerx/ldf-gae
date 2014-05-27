@@ -3,11 +3,10 @@ importPackage(org.apache.jena.riot);
 importPackage(org.apache.jena.riot.system);
 importPackage(com.hp.hpl.jena.rdf.model);
 importPackage(com.google.appengine.api.datastore);
+importPackage(org.apache.http.client.utils);
 
 var apejs = require("apejs.js");
 var select = require('select.js');
-
-
 
 apejs.urls = {
     "/": {
@@ -61,9 +60,21 @@ apejs.urls = {
                 model.read(reader, null, 'N-TRIPLE');
             }
         
-            response.setContentType("text/turtle");
+            var contentType = request.getContentType();
+            if(!contentType)
+                contentType = 'text/html';
+
+            var lang = RDFLanguages.contentTypeToLang(contentType);
+            if(lang == null) {
+                contentType = 'text/turtle';
+                lang = 'TURTLE';
+            } else {
+                lang = lang.getName();
+            }
+
+            response.setContentType(contentType);
             response.setHeader("Access-Control-Allow-Origin", "*");
-            model.write(response.getOutputStream(), 'TURTLE');
+            model.write(response.getOutputStream(), lang);
         },
     },
     '/parse': {
@@ -73,7 +84,6 @@ apejs.urls = {
                 .find()
                 .del();
 
-            var rdfInputStream = getServletConfig().getServletContext().getResourceAsStream("/rdf/foaf.rdf")
 
             var sink = new JavaAdapter(StreamRDFBase, {
                 triple: function(triple) {
@@ -100,8 +110,15 @@ apejs.urls = {
 
             })
 
-            RDFDataMgr.parse(sink, rdfInputStream, org.apache.jena.riot.Lang.RDFXML);
+            var url = getServletConfig().getServletContext().getResource("/rdf/")
+            var dir = new File(url.toURI());
+            var files = dir.listFiles();
+            for(var i=0; i<files.length; i++) {
+                var file = files[i];
+                var inputStream = new FileInputStream(file);
+                RDFDataMgr.parse(sink, inputStream, RDFLanguages.filenameToLang(file.getName()));
 
+            }
 
         }
     }
@@ -113,7 +130,18 @@ function readControls(request, model, totalItems, itemsPerPage, currentPage) {
     if(!request.getServerPort() != 80) {
         uri += ':' + request.getServerPort();
     }
-    uri += '/';
+    uri += request.getRequestURI();
+
+    var queryString = (request.getQueryString() != null ? "?" +
+                 request.getQueryString() : "");;
+    var fullUri = uri + queryString;
+    var firstPage = new URIBuilder(fullUri); 
+    firstPage.setParameter('page', 1);
+    var previousPage = new URIBuilder(fullUri);
+    previousPage.setParameter('page', currentPage - 1);
+    var nextPage = new URIBuilder(fullUri);
+    nextPage.setParameter('page', currentPage + 1);
+
     var controls = '\
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.\
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.\
@@ -153,12 +181,12 @@ _:object hydra:variable "object";\
     hydra:totalItems "'+totalItems+'"^^xsd:integer;\
     void:triples "'+totalItems+'"^^xsd:integer;\
     hydra:itemsPerPage "'+itemsPerPage+'"^^xsd:integer;\
-    hydra:firstPage <'+uri+'?subject=&predicate=&object=&page=1> .';
+    hydra:firstPage <'+firstPage +'> .';
 
     if(currentPage > 1)
-        controls += ':ldf hydra:previousPage <'+uri+'?subject=&predicate=&object=&page='+(currentPage - 1)+'> .';
+        controls += ':ldf hydra:previousPage <'+previousPage +'> .';
 
-    controls += ':ldf hydra:nextPage <'+uri+'?subject=&predicate=&object=&page='+(currentPage + 1)+'> .';
+    controls += ':ldf hydra:nextPage <'+nextPage +'> .';
 
     var reader = new StringReader(controls);
     model.read(reader, null, 'TURTLE');
