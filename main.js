@@ -127,7 +127,7 @@ apejs.urls = {
 function readControls(request, model, totalItems, itemsPerPage, currentPage) {
     var uri = request.getScheme() + "://" +   // "http" + "://
              request.getServerName();
-    if(!request.getServerPort() != 80) {
+    if(request.getServerPort() != 80) {
         uri += ':' + request.getServerPort();
     }
     uri += request.getRequestURI();
