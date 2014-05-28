@@ -74,6 +74,7 @@ apejs.urls = {
 
             response.setContentType(contentType);
             response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader('Cache-Control','public, max-age=3600');
             model.write(response.getOutputStream(), lang);
         },
     },
@@ -161,7 +162,7 @@ function readControls(request, model, totalItems, itemsPerPage, currentPage) {
 @prefix : <'+uri+'>.\
 \
 <'+uri+'#dataset> a void:Dataset, hydra:Collection;\
-    void:subset :ldf;\
+    void:subset <'+fullUri+'>;\
     void:uriLookupEndpoint "'+uri+'{?subject,predicate,object}";\
     hydra:search _:triplePattern.\
 \n\
@@ -177,17 +178,18 @@ _:predicate hydra:variable "predicate";\
 _:object hydra:variable "object";\
     hydra:property rdf:object.\
 \n\
-:ldf a hydra:Collection, hydra:PagedCollection;\
+<'+fullUri+'> a hydra:Collection, hydra:PagedCollection;\
     hydra:totalItems "'+totalItems+'"^^xsd:integer;\
+    dcterms:source <'+uri+'#dataset>;\
     void:triples "'+totalItems+'"^^xsd:integer;\
     hydra:itemsPerPage "'+itemsPerPage+'"^^xsd:integer;\
     hydra:firstPage <'+firstPage +'> .';
 
     if(currentPage > 1)
-        controls += ':ldf hydra:previousPage <'+previousPage +'> .';
+        controls += '<'+fullUri+'> hydra:previousPage <'+previousPage +'> .';
 
     if(totalItems > (itemsPerPage * currentPage))
-        controls += ':ldf hydra:nextPage <'+nextPage +'> .';
+        controls += '<'+fullUri+'> hydra:nextPage <'+nextPage +'> .';
 
     var reader = new StringReader(controls);
     model.read(reader, null, 'TURTLE');
