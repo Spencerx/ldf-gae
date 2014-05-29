@@ -3,6 +3,7 @@ importPackage(org.apache.jena.riot);
 importPackage(org.apache.jena.riot.system);
 importPackage(com.hp.hpl.jena.rdf.model);
 importPackage(com.google.appengine.api.datastore);
+importPackage(org.apache.jena.atlas.web);
 importPackage(org.apache.http.client.utils);
 
 var apejs = require("apejs.js");
@@ -60,9 +61,26 @@ apejs.urls = {
                 model.read(reader, null, 'N-TRIPLE');
             }
         
-            var contentType = request.getHeader('Accept');
-            if(!contentType)
+            var acceptHeader = request.getHeader('Accept');
+            if(!acceptHeader)
+                acceptHeader = 'text/html';
+
+            // from accept header get best supported content type
+            var acceptList = new AcceptList(acceptHeader);
+            var contentType = acceptList.first();
+            if(contentType) {
+                contentType = contentType.getContentType();
+            } else {
                 contentType = 'text/html';
+               
+            }
+
+
+            if(contentType == 'text/html') {
+                // show client
+                var clientHtml = render("skins/client.html");
+                return print(response).html(clientHtml);
+            }
 
             var lang = RDFLanguages.contentTypeToLang(contentType);
             if(lang == null) {
