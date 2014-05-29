@@ -96,13 +96,16 @@ apejs.urls = {
             model.write(response.getOutputStream(), lang);
         },
     },
-    '/parse': {
+    '/delete': {
         get: function(request, response, query) {
             // delete all
             select("triple")
                 .find()
                 .del();
-
+        }
+    },
+    '/parse': {
+        get: function(request, response, query) {
 
             var sink = new JavaAdapter(StreamRDFBase, {
                 triple: function(triple) {
@@ -113,8 +116,8 @@ apejs.urls = {
                     var subject = s.toString();
                     var predicate = p.toString();
                     var object = o.toString();
-
                     var os = new ByteArrayOutputStream();
+
                     RDFDataMgr.writeTriples(os, Collections.singleton(triple).iterator())
 
                     select('triple')
@@ -124,7 +127,6 @@ apejs.urls = {
                             "object": object,
                             "triple": os.toString()
                         });
-                    print(response).html('Added triple: '+ subject + '<br>');
                 }
 
             })
