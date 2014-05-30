@@ -108,6 +108,7 @@ apejs.urls = {
         get: function(request, response, query) {
 
             var sink = new JavaAdapter(StreamRDFBase, {
+                counter: 0,
                 triple: function(triple) {
                     var s = triple.getSubject();
                     var p = triple.getPredicate();
@@ -119,7 +120,10 @@ apejs.urls = {
                     var os = new ByteArrayOutputStream();
 
                     RDFDataMgr.writeTriples(os, Collections.singleton(triple).iterator())
+                    this.counter++;
+                    print(response).text(os.toString() + ' - ' + this.counter);
 
+                    /*
                     select('triple')
                         .add({
                             "subject"  : subject,
@@ -127,6 +131,7 @@ apejs.urls = {
                             "object": object,
                             "triple": os.toString()
                         });
+                    */
                 }
 
             })
@@ -222,6 +227,12 @@ function print(response) {
         html: function(str) {
             if(str) {
                 response.setContentType('text/html');
+                response.getWriter().println(''+str);
+            }
+        },
+        text: function(str) {
+            if(str) {
+                response.setContentType('text/plain');
                 response.getWriter().println(''+str);
             }
         },
