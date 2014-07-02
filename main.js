@@ -107,105 +107,47 @@ apejs.urls = {
                 .del();
         }
     },
-    '/parse-html': {
-        get: function(request, response, query) {
-            var clientHtml = render("skins/parse.html");
-            return print(response).html(clientHtml);
-        }
-    },
     '/parse': {
         get: function(request, response, query) {
+
+            var sink = new JavaAdapter(StreamRDFBase, {
+                triple: function(triple) {
+                    var s = triple.getSubject();
+                    var p = triple.getPredicate();
+                    var o = triple.getObject();
+
+                    var subject = s.toString();
+                    var predicate = p.toString();
+                    var object = o.toString();
+                    var os = new ByteArrayOutputStream();
+
+                    RDFDataMgr.writeTriples(os, Collections.singleton(triple).iterator())
+
+                    select('triple')
+                        .add({
+                            "subject"  : subject,
+                            "predicate": predicate,
+                            "object": object,
+                            "triple": os.toString()
+                        });
+                }
+
+            })
 
             var url = getServletConfig().getServletContext().getResource("/rdf/")
             var dir = new File(url.toURI());
             var files = dir.listFiles();
-
-            var page = request.getParameter('page');
-            if(page)
-                page = parseInt(page, 10);
-            else
-                page = 1;
-
-            var chunkSize = 1000;
-            var limit = chunkSize * page;
-            var start = limit - chunkSize;
-
             for(var i=0; i<files.length; i++) {
                 var file = files[i];
-                var buff = new StringBuffer();
-
-                var counter = 0;
-                var br = new BufferedReader(new FileReader(file));
-                var line;
-                while ((line = br.readLine()) != null) {
-
-                    counter++;
-
-                    buff.append(line);
-
-                    if(counter == chunkSize) {
-                        // write to database
-                        //createTask('/add-ntriples', buff.toString());
-                        addNtriples(buff.toString())
-
-                        // clear buffer and reset counter
-                        counter = 0;
-                        buff.setLength(0);
-
-                    }
-
-                }
-                br.close();
-
-                /*
                 var inputStream = new FileInputStream(file);
                 RDFDataMgr.parse(sink, inputStream, RDFLanguages.filenameToLang(file.getName()));
-                */
 
             }
-        }
-    },
-    "/add-ntriples": {
-        post: function(req, res) {
-            var data = req.getParameter("data");
-            addNtriples(data);
 
         }
     }
 };
 
-function addNtriples(data) {
-    var sink = new JavaAdapter(StreamRDFBase, {
-        triple: function(triple) {
-            var s = triple.getSubject();
-            var p = triple.getPredicate();
-            var o = triple.getObject();
-
-            var subject = s.toString();
-            var predicate = p.toString();
-            var object = o.toString();
-            var os = new ByteArrayOutputStream();
-
-            RDFDataMgr.writeTriples(os, Collections.singleton(triple).iterator())
-
-            select('triple')
-                .add({
-                    "subject"  : subject,
-                    "predicate": predicate,
-                    "object": object,
-                    "triple": os.toString()
-                });
-        }
-
-    });
-
-    var inputStream = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
-    RDFDataMgr.parse(sink, inputStream, Lang.NTRIPLES);
-}
-function createTask(url, data) {
-    var queue = QueueFactory.getDefaultQueue();
-    queue.add(TaskOptions.Builder.withUrl(url).param("data", data));
-}
 
 function readControls(request, model, totalItems, itemsPerPage, currentPage) {
     var uri = request.getScheme() + "://" +   // "http" + "://

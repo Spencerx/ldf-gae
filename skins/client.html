@@ -1,71 +1,40 @@
 
 <!doctype html>
-<!-- ©2014 Ruben Verborgh - Multimedia Lab / iMinds / Ghent University -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Linked Data Fragments client</title>
-<style>html,textarea,button{font:11pt/1.4 'Open Sans',Verdana,Arial,sans-serif;outline:0}body{max-width:650px;margin:2em auto}a,button,label{color:#be1622;cursor:pointer;font-weight:bold;text-decoration:none}a:hover{text-decoration:underline}button:disabled{color:gray}header h1{margin:.7em 0 0}header p{font-weight:bold;margin:0 0 3em}header .logo{float:right}header img{width:160px;border:0}fieldset{border:0;padding:0}fieldset p{margin:0}label{display:block;padding:2em .5em .5em 0}footer{font-size:.8em;margin-top:2em}textarea{width:100%;min-height:10em;cursor:pointer;margin:0 0 1em}textarea:hover{color:#be1622}pre{width:100%;max-width:650px;height:20em;font-size:9pt;overflow:scroll;margin:0}.log{color:#666}.examples,.startFragments{float:right;padding:2em 0}.startFragments{padding:.3em 0}div>label{display:inline}select{min-width:250px}</style>
-  <link rel=stylesheet href="http://fonts.googleapis.com/css?family=Open+Sans:300,400italic,700italic,400,700">
+  <script src="/jquery-2.1.0.js"></script>
+  <script src="/ldf-client.js"></script>
+  <script src="/ldf-client-ui.js"></script>
+  <script>
+    // Set the configuration of the Linked Data Fragments Client.
+    var ldfConfig = { startFragment: window.location.href
+                      };
+    // Activate the UI for the .ldf-client element on load.
+    jQuery(function ($) {
+      new LinkedDataFragmentsClientUI($('.ldf-client'), ldfConfig).activate();
+    });
+  </script>
+  <link rel="stylesheet" href="/ldf-client.css" />
 </head>
 <body>
-  <header>
-    <a class="logo" href="http://linkeddatafragments.org/">
-      <img src="http://linkeddatafragments.org/images/logo.svg" alt="" />
-    </a>
-    <h1>Linked Data Fragments client</h1>
-    <p class="abstract">
-      Enter a basic graph pattern query below
-      and see how your browser solves it using only
-      <a href="http://linkeddatafragments.org/concept/" target="_blank">Basic Linked Data Fragments</a>.
-    </p>
-  </header>
-  <!--[if lte IE 9]><b>Your browser is unsupported.</b><div style="display:none"><![endif]-->
-  <main>
-    <fieldset class="ldf-client">
+  <h1>Linked Data Fragments client</h1>
+  <fieldset class="ldf-client">
+    <textarea class="query">
+PREFIX foaf: <http://xmlns.com/foaf/0.1/> 
 
-      <label>Enter a SPARQL query</label>
-<textarea class="query">SELECT * WHERE { 
-    ?s ?p ?o 
+SELECT * WHERE {
+    ?tim a foaf:Person; 
+            foaf:name "Tim Berners-Lee" ;
+            foaf:knows ?knows .
+    ?knows foaf:name ?knowsName .
 }
-LIMIT 10
-</textarea>
-
-      <div class="startFragments">
-        <label>start fragment</label>
-        <input class="startFragment" id="startFragment" value="" />
-      </div>
-      <p><button class="execute">Answer using Web data</button></p>
-
-      <label>Query results</label>
-      <pre class="results"></pre>
-
-      <label>Execution log</label>
-      <pre class="log"></pre>
-    </fieldset>
-
-    <p>
-      Discover how <a href="http://linkeddatafragments.org" target="_blank">Linked Data Fragments</a>
-      enable Web-scale querying of Linked Data.
-    </p>
-  </main>
-
-  <footer>
-    <p>
-      ©2013–2014
-      <a href="http://multimedialab.elis.ugent.be/" target="_blank">Multimedia Lab</a>,
-      <a href="http://www.ugent.be/" target="_blank">Ghent University</a> –
-      <a href="http://www.iminds.be/" target="_blank">iMinds</a>, Belgium.
-      <a href="https://github.com/LinkedDataFragments/WebClient">Source code</a>.
-    </p>
-  </footer>
-<script src="http://client.linkeddatafragments.org/scripts/ldf-client.js"></script>
-<script>
-$(function(){
-    $('#startFragment').val(window.location.href);
-    $('#startFragment').trigger('change');
-});
-</script>
+    </textarea>
+    <button class="execute">Execute query</button>
+    <pre class="results"></pre>
+    <pre class="log"></pre>
+  </fieldset>
 </body>
 </html>
 
