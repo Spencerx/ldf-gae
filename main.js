@@ -14,7 +14,7 @@ var select = require('select.js');
 
 apejs.urls = {
     "/": {
-        get: function(request, response, query) {
+        get: function(request, response) {
             var subject = request.getParameter('subject');
             var predicate = request.getParameter('predicate');
             var object = request.getParameter('object');
@@ -41,9 +41,9 @@ apejs.urls = {
 
 
             // query datastore
-            var query = new Query('triple');
+            var query = new com.google.appengine.api.datastore.Query('triple');
             for(var x in filter) {
-                query.addFilter(x, Query.FilterOperator.EQUAL, filter[x]);
+                query.addFilter(x, com.google.appengine.api.datastore.Query.FilterOperator.EQUAL, filter[x]);
             }
             var datastoreService = DatastoreServiceFactory.getDatastoreService();
             var preparedQuery = datastoreService.prepare(query);
